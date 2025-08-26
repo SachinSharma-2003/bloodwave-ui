@@ -1,20 +1,56 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import StatusChip from "@/components/StatusChip";
-import { mockDonors, bloodGroups, cities } from "@/data/mockData";
+import { bloodGroups, cities } from "@/data/mockData";
 import { Search, Phone, Mail, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Donor {
+  id: string;
+  user_id: string;
+  blood_group: string;
+  city: string;
+  last_donated: string | null;
+  name: string;
+  phone: string | null;
+  is_available: boolean;
+}
 
 const DonorDirectory = () => {
   const [bloodGroupFilter, setBloodGroupFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDonors();
+  }, []);
+
+  const fetchDonors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('donors_with_availability')
+        .select('*');
+
+      if (error) throw error;
+
+      setDonors(data || []);
+    } catch (error) {
+      console.error('Error fetching donors:', error);
+      toast.error('Failed to load donors');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredDonors = useMemo(() => {
-    return mockDonors.filter((donor) => {
-      const matchesBloodGroup = bloodGroupFilter === "all" || donor.bloodGroup === bloodGroupFilter;
+    return donors.filter((donor) => {
+      const matchesBloodGroup = bloodGroupFilter === "all" || donor.blood_group === bloodGroupFilter;
       const matchesCity = cityFilter === "all" || donor.city === cityFilter;
       const matchesSearch = searchTerm === "" || 
         donor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,7 +58,18 @@ const DonorDirectory = () => {
       
       return matchesBloodGroup && matchesCity && matchesSearch;
     });
-  }, [bloodGroupFilter, cityFilter, searchTerm]);
+  }, [donors, bloodGroupFilter, cityFilter, searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading donors...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -87,44 +134,41 @@ const DonorDirectory = () => {
                   <h3 className="font-semibold text-lg text-foreground">{donor.name}</h3>
                   <div className="flex items-center space-x-2 mt-1">
                     <Badge variant="outline" className="font-medium">
-                      {donor.bloodGroup}
+                      {donor.blood_group}
                     </Badge>
                     <span className="text-sm text-muted-foreground">{donor.city}</span>
                   </div>
                 </div>
                 <StatusChip 
-                  status={donor.isAvailable ? "available" : "unavailable"} 
+                  status={donor.is_available ? "available" : "unavailable"} 
                 />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>{donor.phone}</span>
-              </div>
+              {donor.phone && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>{donor.phone}</span>
+                </div>
+              )}
               
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span className="truncate">{donor.email}</span>
-              </div>
-              
-              {donor.lastDonation && (
+              {donor.last_donated && (
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Last donation: {new Date(donor.lastDonation).toLocaleDateString()}</span>
+                  <span>Last donation: {new Date(donor.last_donated).toLocaleDateString()}</span>
                 </div>
               )}
               
               <div className="pt-2">
                 <button
-                  disabled={!donor.isAvailable}
+                  disabled={!donor.is_available}
                   className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    donor.isAvailable
+                    donor.is_available
                       ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                       : "bg-muted text-muted-foreground cursor-not-allowed"
                   }`}
                 >
-                  {donor.isAvailable ? "Contact Donor" : "Currently Unavailable"}
+                  {donor.is_available ? "Contact Donor" : "Currently Unavailable"}
                 </button>
               </div>
             </CardContent>
@@ -132,7 +176,7 @@ const DonorDirectory = () => {
         ))}
       </div>
 
-      {filteredDonors.length === 0 && (
+      {filteredDonors.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🩸</div>
           <h3 className="text-xl font-semibold text-foreground mb-2">No donors found</h3>
