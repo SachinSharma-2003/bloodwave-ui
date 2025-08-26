@@ -38,15 +38,194 @@ export type Database = {
         }
         Relationships: []
       }
+      donors: {
+        Row: {
+          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          city: string
+          created_at: string
+          id: string
+          last_donated: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          city: string
+          created_at?: string
+          id?: string
+          last_donated?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_group?: Database["public"]["Enums"]["blood_group_type"]
+          city?: string
+          created_at?: string
+          id?: string
+          last_donated?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pledges: {
+        Row: {
+          created_at: string
+          donor_id: string
+          donor_name: string
+          id: string
+          request_id: string
+          status: string
+          units_pledged: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          donor_id: string
+          donor_name: string
+          id?: string
+          request_id: string
+          status?: string
+          units_pledged: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          donor_id?: string
+          donor_name?: string
+          id?: string
+          request_id?: string
+          status?: string
+          units_pledged?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pledges_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pledges_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "donors_with_availability"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pledges_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      requests: {
+        Row: {
+          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          city: string
+          created_at: string
+          description: string | null
+          hospital_id: string
+          hospital_name: string
+          id: string
+          status: Database["public"]["Enums"]["request_status"]
+          units_fulfilled: number
+          units_required: number
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          city: string
+          created_at?: string
+          description?: string | null
+          hospital_id: string
+          hospital_name: string
+          id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          units_fulfilled?: number
+          units_required: number
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          blood_group?: Database["public"]["Enums"]["blood_group_type"]
+          city?: string
+          created_at?: string
+          description?: string | null
+          hospital_id?: string
+          hospital_name?: string
+          id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          units_fulfilled?: number
+          units_required?: number
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      donors_with_availability: {
+        Row: {
+          blood_group: Database["public"]["Enums"]["blood_group_type"] | null
+          city: string | null
+          created_at: string | null
+          id: string | null
+          is_available: boolean | null
+          last_donated: string | null
+          name: string | null
+          phone: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      is_donor_available: {
+        Args: { last_donation_date: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      blood_group_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
+      request_status: "open" | "fulfilled" | "cancelled"
+      user_role: "donor" | "hospital"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -173,6 +352,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      blood_group_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      request_status: ["open", "fulfilled", "cancelled"],
+      user_role: ["donor", "hospital"],
+    },
   },
 } as const
