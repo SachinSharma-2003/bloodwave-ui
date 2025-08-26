@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      Donor: {
+        Row: {
+          Blood_group: string | null
+          City: string | null
+          id: number
+          Last_donated: string | null
+          Status: boolean | null
+        }
+        Insert: {
+          Blood_group?: string | null
+          City?: string | null
+          id?: number
+          Last_donated?: string | null
+          Status?: boolean | null
+        }
+        Update: {
+          Blood_group?: string | null
+          City?: string | null
+          id?: number
+          Last_donated?: string | null
+          Status?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
