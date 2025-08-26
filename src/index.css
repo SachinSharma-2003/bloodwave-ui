@@ -2,41 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Blood Donation Management System Design System */
 
 @layer base {
   :root {
+    /* Core backgrounds */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 220 13% 18%;
+    
+    /* Medical red primary theme */
+    --primary: 0 74% 42%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 0 74% 36%;
+    
+    /* Success states (available, completed) */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+    --success-light: 142 52% 96%;
+    
+    /* Warning states (pending, low stock) */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    --warning-light: 48 100% 96%;
+    
+    /* Neutral states (unavailable, cancelled) */
+    --neutral: 220 9% 46%;
+    --neutral-foreground: 0 0% 98%;
+    --neutral-light: 220 13% 95%;
+    
+    /* Card and surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 220 13% 18%;
+    --card-hover: 220 13% 98%;
+    
+    /* Borders and inputs */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 0 74% 42%;
+    
+    /* Text hierarchy */
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 13% 95%;
+    --accent-foreground: 220 13% 18%;
+    
+    /* Interactive elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 18%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    /* Spacing and layout */
+    --radius: 0.75rem;
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted)));
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +128,39 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Status chip variants */
+  .status-available {
+    @apply bg-success-light text-success border border-success/20;
+  }
+  
+  .status-pending {
+    @apply bg-warning-light text-warning border border-warning/20;
+  }
+  
+  .status-unavailable {
+    @apply bg-neutral-light text-neutral border border-neutral/20;
+  }
+  
+  /* Card styles */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+  }
+  
+  /* Medical themed components */
+  .medical-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .progress-bar {
+    @apply bg-muted rounded-full h-2 overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply h-full transition-all duration-500 ease-out rounded-full;
   }
 }
