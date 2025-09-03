@@ -44,7 +44,13 @@ const HospitalDashboard = () => {
 
       if (error) throw error;
 
-      setRequests(data || []);
+      // Transform data to calculate status and ensure all fields exist
+      const transformedData = data?.map(request => ({
+        ...request,
+        status: request.units_fulfilled >= request.units_required ? 'fulfilled' : 'open'
+      })) || [];
+      
+      setRequests(transformedData);
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast.error('Failed to load requests');

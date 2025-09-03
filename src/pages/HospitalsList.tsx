@@ -48,7 +48,7 @@ const HospitalsList = () => {
         .from('hospitals')
         .select('*')
         .order('name');
-
+      
       if (error) throw error;
       setHospitals(data || []);
     } catch (error) {

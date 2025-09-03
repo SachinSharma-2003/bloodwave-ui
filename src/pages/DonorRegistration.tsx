@@ -47,10 +47,11 @@ const DonorRegistration = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          blood_group: formData.bloodGroup,
+          blood_group: formData.bloodGroup as "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
           city: formData.city,
           available: formData.available,
-          last_donated: formData.lastDonated || null
+          last_donated: formData.lastDonated || null,
+          user_id: '00000000-0000-0000-0000-000000000000' // Placeholder since this field is required
         }]);
 
       if (error) throw error;

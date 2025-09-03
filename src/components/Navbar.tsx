@@ -1,5 +1,5 @@
 import { NavLink, Link } from "react-router-dom";
-import { Heart, FileText, Plus, Users, User, LogOut } from "lucide-react";
+import { Heart, FileText, Plus, Users, User, LogOut, Building, HandHeart, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,8 +9,11 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { to: "/", icon: Users, label: "Donor Directory" },
-    { to: "/requests", icon: FileText, label: "My Requests" },
+    { to: "/", icon: Users, label: "Donors" },
+    { to: "/requests", icon: FileText, label: "Requests" },
+    { to: "/hospitals", icon: Building, label: "Hospitals" },
+    { to: "/pledges", icon: HandHeart, label: "Pledges" },
+    { to: "/register-donor", icon: UserPlus, label: "Register Donor" },
     { to: "/new-request", icon: Plus, label: "New Request" },
   ];
 

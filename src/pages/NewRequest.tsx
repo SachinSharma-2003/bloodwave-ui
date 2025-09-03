@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { bloodGroups, cities } from "@/data/mockData";
 import { Plus, Building, MapPin, Droplets, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const NewRequest = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     bloodGroup: "",
@@ -33,36 +35,51 @@ const NewRequest = () => {
     e.preventDefault();
     
     if (!formData.bloodGroup || !formData.city || !formData.unitsRequired || !formData.urgency || !formData.hospitalName) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    if (!user) {
+      toast.error("You must be logged in to create a request.");
       return;
     }
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Request Created Successfully!",
-      description: `Your request for ${formData.unitsRequired} units of ${formData.bloodGroup} blood has been created.`,
-    });
+    try {
+      const { error } = await supabase
+        .from('requests')
+        .insert([{
+          blood_group: formData.bloodGroup as "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
+          units_required: parseInt(formData.unitsRequired),
+          city: formData.city,
+          urgency: formData.urgency,
+          hospital_name: formData.hospitalName,
+          description: formData.description || null,
+          hospital_id: user.id // Using user ID as hospital ID for simplicity
+        }]);
 
-    // Reset form and navigate
-    setFormData({
-      bloodGroup: "",
-      city: "",
-      unitsRequired: "",
-      urgency: "",
-      hospitalName: "",
-      description: ""
-    });
-    
-    setIsSubmitting(false);
-    navigate("/requests");
+      if (error) throw error;
+
+      toast.success(`Your request for ${formData.unitsRequired} units of ${formData.bloodGroup} blood has been created.`);
+
+      // Reset form and navigate
+      setFormData({
+        bloodGroup: "",
+        city: "",
+        unitsRequired: "",
+        urgency: "",
+        hospitalName: "",
+        description: ""
+      });
+      
+      navigate("/requests");
+    } catch (error) {
+      console.error('Error creating request:', error);
+      toast.error("Failed to create request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

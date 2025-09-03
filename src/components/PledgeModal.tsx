@@ -4,14 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BloodRequest } from "@/data/mockData";
 import { Heart, User, Droplets } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Request {
+  id: string;
+  blood_group: string;
+  hospital_name: string;
+  city: string;
+  units_required: number;
+  units_fulfilled: number;
+}
 
 interface PledgeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  request: BloodRequest | null;
+  request: Request | null;
 }
 
 const PledgeModal = ({ open, onOpenChange, request }: PledgeModalProps) => {
@@ -20,29 +29,40 @@ const PledgeModal = ({ open, onOpenChange, request }: PledgeModalProps) => {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!units || !donorName || !phone) return;
+    if (!units || !donorName || !phone || !request) return;
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Pledge Submitted Successfully!",
-      description: `Thank you ${donorName}! Your pledge of ${units} units has been recorded.`,
-    });
+    try {
+      // Create pledge in Supabase
+      const { error } = await supabase
+        .from('pledges')
+        .insert([{
+          request_id: request.id,
+          units_pledged: parseInt(units),
+          donor_id: '00000000-0000-0000-0000-000000000000', // Placeholder
+          status: 'pledged'
+        }]);
 
-    // Reset form
-    setUnits("");
-    setDonorName("");
-    setPhone("");
-    setNotes("");
-    setIsSubmitting(false);
-    onOpenChange(false);
+      if (error) throw error;
+
+      toast.success(`Thank you ${donorName}! Your pledge of ${units} units has been recorded.`);
+
+      // Reset form
+      setUnits("");
+      setDonorName("");
+      setPhone("");
+      setNotes("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating pledge:', error);
+      toast.error('Failed to create pledge. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!request) return null;
@@ -65,14 +85,14 @@ const PledgeModal = ({ open, onOpenChange, request }: PledgeModalProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Droplets className="h-4 w-4 text-primary" />
-                <span className="font-medium">{request.bloodGroup}</span>
+                <span className="font-medium">{request.blood_group}</span>
               </div>
               <div className="text-sm text-muted-foreground">
                 {request.city}
               </div>
             </div>
             <div className="mt-2 text-sm text-muted-foreground">
-              Need: {request.unitsRequired - request.unitsFulfilled} more units
+              Need: {request.units_required - request.units_fulfilled} more units
             </div>
           </div>
 
@@ -111,7 +131,7 @@ const PledgeModal = ({ open, onOpenChange, request }: PledgeModalProps) => {
                 id="units"
                 type="number"
                 min="1"
-                max={request.unitsRequired - request.unitsFulfilled}
+                max={request.units_required - request.units_fulfilled}
                 placeholder="Enter number of units"
                 value={units}
                 onChange={(e) => setUnits(e.target.value)}

@@ -10,6 +10,9 @@ import DonorDirectory from "./pages/DonorDirectory";
 import HospitalDashboard from "./pages/HospitalDashboard";
 import RequestDetail from "./pages/RequestDetail";
 import NewRequest from "./pages/NewRequest";
+import HospitalsList from "./pages/HospitalsList";
+import PledgesList from "./pages/PledgesList";
+import DonorRegistration from "./pages/DonorRegistration";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +47,21 @@ const App = () => (
               <Route path="/new-request" element={
                 <ProtectedRoute>
                   <NewRequest />
+                </ProtectedRoute>
+              } />
+              <Route path="/hospitals" element={
+                <ProtectedRoute>
+                  <HospitalsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/pledges" element={
+                <ProtectedRoute>
+                  <PledgesList />
+                </ProtectedRoute>
+              } />
+              <Route path="/register-donor" element={
+                <ProtectedRoute>
+                  <DonorRegistration />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

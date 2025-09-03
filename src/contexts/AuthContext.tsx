@@ -83,7 +83,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { error: donorError } = await supabase
             .from('donors')
             .insert([{
-              user_id: data.user.id,
+              name,
+              email,
+              phone: additionalData?.phone || '',
               blood_group: additionalData.bloodGroup,
               city: additionalData.city,
               last_donated: additionalData.lastDonated || null

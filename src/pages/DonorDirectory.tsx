@@ -11,7 +11,6 @@ import { toast } from "sonner";
 
 interface Donor {
   id: string;
-  user_id: string;
   blood_group: string;
   city: string;
   last_donated: string | null;
@@ -34,12 +33,24 @@ const DonorDirectory = () => {
   const fetchDonors = async () => {
     try {
       const { data, error } = await supabase
-        .from('donors_with_availability')
-        .select('*');
+        .from('donors')
+        .select('*')
+        .order('name');
 
       if (error) throw error;
 
-      setDonors(data || []);
+      // Transform data to match expected interface
+      const transformedData = data?.map(donor => ({
+        id: donor.id,
+        blood_group: donor.blood_group,
+        city: donor.city,
+        last_donated: donor.last_donated,
+        name: donor.name || 'Anonymous',
+        phone: donor.phone,
+        is_available: donor.available
+      })) || [];
+
+      setDonors(transformedData);
     } catch (error) {
       console.error('Error fetching donors:', error);
       toast.error('Failed to load donors');

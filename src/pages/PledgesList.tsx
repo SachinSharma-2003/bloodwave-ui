@@ -50,13 +50,38 @@ const PledgesList = () => {
 
   const fetchPledges = async () => {
     try {
-      const { data, error } = await supabase
-        .from('pledges_with_details')
+      // Use basic pledges table
+      const { data: pledgesData, error: pledgesError } = await supabase
+        .from('pledges')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPledges(data || []);
+      if (pledgesError) throw pledgesError;
+
+      // Get related request data
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select('id, blood_group, hospital_name, city');
+
+      if (requestsError) throw requestsError;
+
+      // Transform and combine data
+      const transformedData = pledgesData?.map(pledge => {
+        const relatedRequest = requestsData?.find(req => req.id === pledge.request_id);
+        return {
+          id: pledge.id,
+          units_pledged: pledge.units_pledged,
+          status: pledge.status,
+          created_at: pledge.created_at,
+          donor_name: 'Anonymous Donor',
+          donor_phone: 'N/A',
+          request_blood_group: relatedRequest?.blood_group || '',
+          request_hospital_name: relatedRequest?.hospital_name || '',
+          request_city: relatedRequest?.city || ''
+        };
+      }) || [];
+      
+      setPledges(transformedData);
     } catch (error) {
       console.error('Error fetching pledges:', error);
       toast.error('Failed to load pledges');

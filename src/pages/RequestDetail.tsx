@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,90 @@ import { Badge } from "@/components/ui/badge";
 import StatusChip from "@/components/StatusChip";
 import ProgressBar from "@/components/ProgressBar";
 import PledgeModal from "@/components/PledgeModal";
-import { mockRequests, mockPledges } from "@/data/mockData";
 import { ArrowLeft, Calendar, MapPin, AlertTriangle, Heart, Phone, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Request {
+  id: string;
+  blood_group: string;
+  hospital_name: string;
+  city: string;
+  units_required: number;
+  units_fulfilled: number;
+  urgency: string;
+  description: string | null;
+  created_at: string;
+  status: string;
+}
+
+interface Pledge {
+  id: string;
+  units_pledged: number;
+  status: string;
+  created_at: string;
+}
 
 const RequestDetail = () => {
   const { id } = useParams();
   const [pledgeModalOpen, setPledgeModalOpen] = useState(false);
-  
-  const request = mockRequests.find(r => r.id === id);
-  const pledges = mockPledges.filter(p => p.requestId === id);
+  const [request, setRequest] = useState<Request | null>(null);
+  const [pledges, setPledges] = useState<Pledge[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      fetchRequestData(id);
+    }
+  }, [id]);
+
+  const fetchRequestData = async (requestId: string) => {
+    try {
+      // Fetch request details
+      const { data: requestData, error: requestError } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
+
+      if (requestError) throw requestError;
+
+      // Calculate status
+      const calculatedStatus = requestData.units_fulfilled >= requestData.units_required ? 'fulfilled' : 'open';
+      
+      setRequest({
+        ...requestData,
+        status: calculatedStatus
+      });
+
+      // Fetch pledges for this request
+      const { data: pledgesData, error: pledgesError } = await supabase
+        .from('pledges')
+        .select('*')
+        .eq('request_id', requestId)
+        .order('created_at', { ascending: false });
+
+      if (pledgesError) throw pledgesError;
+
+      setPledges(pledgesData || []);
+    } catch (error) {
+      console.error('Error fetching request data:', error);
+      toast.error('Failed to load request details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading request details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!request) {
     return (
@@ -76,15 +151,15 @@ const RequestDetail = () => {
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Blood Group</label>
                     <div className="mt-1">
-                      <Badge variant="outline" className="font-medium text-lg px-3 py-1">
-                        {request.bloodGroup}
-                      </Badge>
+                    <Badge variant="outline" className="font-medium text-lg px-3 py-1">
+                      {request.blood_group}
+                    </Badge>
                     </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Hospital</label>
-                    <p className="mt-1 font-medium text-foreground">{request.hospitalName}</p>
+                    <p className="mt-1 font-medium text-foreground">{request.hospital_name}</p>
                   </div>
 
                   <div className="flex items-center space-x-1">
@@ -97,7 +172,7 @@ const RequestDetail = () => {
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Status</label>
                     <div className="mt-1">
-                      <StatusChip status={request.status} />
+                      <StatusChip status={request.status as "open" | "fulfilled" | "available" | "unavailable" | "cancelled" | "pending"} />
                     </div>
                   </div>
 
@@ -112,7 +187,7 @@ const RequestDetail = () => {
                   <div className="flex items-center space-x-1">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-foreground">
-                      Created: {new Date(request.createdDate).toLocaleDateString()}
+                      Created: {new Date(request.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -134,8 +209,8 @@ const RequestDetail = () => {
             </CardHeader>
             <CardContent>
               <ProgressBar 
-                current={request.unitsFulfilled} 
-                total={request.unitsRequired}
+                current={request.units_fulfilled} 
+                total={request.units_required}
               />
             </CardContent>
           </Card>
@@ -155,14 +230,14 @@ const RequestDetail = () => {
                           <User className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{pledge.donorName}</p>
+                          <p className="font-medium text-foreground">Anonymous Donor</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(pledge.date).toLocaleDateString()}
+                            {new Date(pledge.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-foreground">{pledge.units} units</p>
+                        <p className="font-medium text-foreground">{pledge.units_pledged} units</p>
                         <StatusChip 
                           status={pledge.status === "confirmed" ? "available" : "pending"} 
                           className="mt-1"
@@ -190,18 +265,18 @@ const RequestDetail = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">{request.unitsRequired}</div>
+                <div className="text-3xl font-bold text-primary">{request.units_required}</div>
                 <p className="text-sm text-muted-foreground">Units Required</p>
               </div>
               
               <div className="text-center">
-                <div className="text-3xl font-bold text-success">{request.unitsFulfilled}</div>
+                <div className="text-3xl font-bold text-success">{request.units_fulfilled}</div>
                 <p className="text-sm text-muted-foreground">Units Pledged</p>
               </div>
               
               <div className="text-center">
                 <div className="text-3xl font-bold text-warning">
-                  {request.unitsRequired - request.unitsFulfilled}
+                  {request.units_required - request.units_fulfilled}
                 </div>
                 <p className="text-sm text-muted-foreground">Units Remaining</p>
               </div>
