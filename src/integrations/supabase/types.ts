@@ -14,56 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
-      Donor: {
+      blood_requests: {
         Row: {
-          Blood_group: string | null
-          City: string | null
-          id: number
-          Last_donated: string | null
-          Status: boolean | null
+          blood_group: string
+          city: string
+          created_at: string
+          deadline: string
+          hospital_id: string
+          id: string
+          status: Database["public"]["Enums"]["request_status"]
+          units_needed: number
+          urgency: Database["public"]["Enums"]["urgency_level"]
         }
         Insert: {
-          Blood_group?: string | null
-          City?: string | null
-          id?: number
-          Last_donated?: string | null
-          Status?: boolean | null
+          blood_group: string
+          city: string
+          created_at?: string
+          deadline: string
+          hospital_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          units_needed: number
+          urgency: Database["public"]["Enums"]["urgency_level"]
         }
         Update: {
-          Blood_group?: string | null
-          City?: string | null
-          id?: number
-          Last_donated?: string | null
-          Status?: boolean | null
+          blood_group?: string
+          city?: string
+          created_at?: string
+          deadline?: string
+          hospital_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          units_needed?: number
+          urgency?: Database["public"]["Enums"]["urgency_level"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blood_requests_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       donors: {
         Row: {
-          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          available: boolean
+          blood_group: string
+          city: string
+          created_at: string
+          donation_count: number
+          email: string
+          id: string
+          last_donated: string | null
+          name: string
+          phone: string
+        }
+        Insert: {
+          available?: boolean
+          blood_group: string
+          city: string
+          created_at?: string
+          donation_count?: number
+          email: string
+          id?: string
+          last_donated?: string | null
+          name: string
+          phone: string
+        }
+        Update: {
+          available?: boolean
+          blood_group?: string
+          city?: string
+          created_at?: string
+          donation_count?: number
+          email?: string
+          id?: string
+          last_donated?: string | null
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      hospitals: {
+        Row: {
+          address: string
           city: string
           created_at: string
           id: string
-          last_donated: string | null
-          updated_at: string
+          name: string
+          phone: string
           user_id: string
         }
         Insert: {
-          blood_group: Database["public"]["Enums"]["blood_group_type"]
+          address: string
           city: string
           created_at?: string
           id?: string
-          last_donated?: string | null
-          updated_at?: string
+          name: string
+          phone: string
           user_id: string
         }
         Update: {
-          blood_group?: Database["public"]["Enums"]["blood_group_type"]
+          address?: string
           city?: string
           created_at?: string
           id?: string
-          last_donated?: string | null
-          updated_at?: string
+          name?: string
+          phone?: string
           user_id?: string
         }
         Relationships: []
@@ -72,32 +131,26 @@ export type Database = {
         Row: {
           created_at: string
           donor_id: string
-          donor_name: string
           id: string
           request_id: string
-          status: string
+          status: Database["public"]["Enums"]["pledge_status"]
           units_pledged: number
-          updated_at: string
         }
         Insert: {
           created_at?: string
           donor_id: string
-          donor_name: string
           id?: string
           request_id: string
-          status?: string
+          status?: Database["public"]["Enums"]["pledge_status"]
           units_pledged: number
-          updated_at?: string
         }
         Update: {
           created_at?: string
           donor_id?: string
-          donor_name?: string
           id?: string
           request_id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["pledge_status"]
           units_pledged?: number
-          updated_at?: string
         }
         Relationships: [
           {
@@ -105,20 +158,13 @@ export type Database = {
             columns: ["donor_id"]
             isOneToOne: false
             referencedRelation: "donors"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "pledges_donor_id_fkey"
-            columns: ["donor_id"]
-            isOneToOne: false
-            referencedRelation: "donors_with_availability"
-            referencedColumns: ["user_id"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pledges_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
-            referencedRelation: "requests"
+            referencedRelation: "blood_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -162,7 +208,6 @@ export type Database = {
           hospital_id: string
           hospital_name: string
           id: string
-          status: Database["public"]["Enums"]["request_status"]
           units_fulfilled: number
           units_required: number
           updated_at: string
@@ -176,7 +221,6 @@ export type Database = {
           hospital_id: string
           hospital_name: string
           id?: string
-          status?: Database["public"]["Enums"]["request_status"]
           units_fulfilled?: number
           units_required: number
           updated_at?: string
@@ -190,7 +234,6 @@ export type Database = {
           hospital_id?: string
           hospital_name?: string
           id?: string
-          status?: Database["public"]["Enums"]["request_status"]
           units_fulfilled?: number
           units_required?: number
           updated_at?: string
@@ -200,18 +243,17 @@ export type Database = {
       }
     }
     Views: {
-      donors_with_availability: {
+      pledges_with_details: {
         Row: {
-          blood_group: Database["public"]["Enums"]["blood_group_type"] | null
-          city: string | null
           created_at: string | null
+          donor_name: string | null
+          donor_phone: string | null
           id: string | null
-          is_available: boolean | null
-          last_donated: string | null
-          name: string | null
-          phone: string | null
-          updated_at: string | null
-          user_id: string | null
+          request_blood_group: string | null
+          request_city: string | null
+          request_hospital_name: string | null
+          status: string | null
+          units_pledged: number | null
         }
         Relationships: []
       }
@@ -224,7 +266,9 @@ export type Database = {
     }
     Enums: {
       blood_group_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
-      request_status: "open" | "fulfilled" | "cancelled"
+      pledge_status: "pledged" | "completed" | "canceled"
+      request_status: "open" | "closed" | "fulfilled"
+      urgency_level: "low" | "medium" | "high" | "critical"
       user_role: "donor" | "hospital"
     }
     CompositeTypes: {
@@ -354,7 +398,9 @@ export const Constants = {
   public: {
     Enums: {
       blood_group_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-      request_status: ["open", "fulfilled", "cancelled"],
+      pledge_status: ["pledged", "completed", "canceled"],
+      request_status: ["open", "closed", "fulfilled"],
+      urgency_level: ["low", "medium", "high", "critical"],
       user_role: ["donor", "hospital"],
     },
   },
